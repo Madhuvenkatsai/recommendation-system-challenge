@@ -49,6 +49,11 @@ The frontend API client uses `VITE_API_BASE_URL`; its local default is
 `http://127.0.0.1:8000`. FastAPI CORS is restricted to `localhost` and
 `127.0.0.1` on Vite's development (5173) and preview (4173) ports, without
 credential cookies.
+Set the backend's `CORS_ALLOWED_ORIGINS` to a comma-separated list of exact
+HTTP(S) frontend origins for production; wildcard origins are rejected. Set
+`VITE_API_BASE_URL` at frontend build time to the public API origin. The
+`MONGODB_COLLECTION_PREFIX=full_` setting selects the isolated full-scale
+collections for all API routes without changing the configured database.
 
 ## Operation and database limitations
 

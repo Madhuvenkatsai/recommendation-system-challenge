@@ -294,6 +294,20 @@ SCHEMAS: dict[str, dict[str, Any]] = {
             additionalProperties=True,
         ),
     },
+    "lifecycle_events": {
+        "_id": STRING_ID,
+        "entity_type": _field("string", enum=["cart", "order"]),
+        "entity_id": STRING,
+        "previous_state": OPTIONAL_STRING,
+        "new_state": STRING,
+        "event_type": _field("string", enum=["created", "status_changed"]),
+        "occurred_at": DATE,
+        "sequence": POSITIVE_INTEGER,
+        "source_type": STRING,
+        "source_id": STRING,
+        "reference_id": OPTIONAL_STRING,
+        "metadata": OBJECT,
+    },
 }
 
 REQUIRED_FIELDS: dict[str, list[str]] = {
@@ -366,6 +380,11 @@ REQUIRED_FIELDS: dict[str, list[str]] = {
     "evaluation_results": [
         "_id", "model_run_id", "dataset_split_id", "k", "evaluated_at",
         "sample_count", "metrics",
+    ],
+    "lifecycle_events": [
+        "_id", "entity_type", "entity_id", "previous_state", "new_state",
+        "event_type", "occurred_at", "sequence", "source_type", "source_id",
+        "metadata",
     ],
 }
 
@@ -462,6 +481,11 @@ INDEXES: dict[str, list[dict[str, Any]]] = {
     "evaluation_results": [
         {"keys": [("model_run_id", 1), ("dataset_split_id", 1), ("k", 1)], "name": "model_split_k_unique", "unique": True},
     ],
+    "lifecycle_events": [
+        {"keys": [("entity_type", 1), ("entity_id", 1), ("sequence", 1)], "name": "entity_sequence_unique", "unique": True},
+        {"keys": [("entity_type", 1), ("entity_id", 1), ("occurred_at", 1)], "name": "entity_occurred_at"},
+        {"keys": [("source_type", 1), ("source_id", 1)], "name": "source_reference"},
+    ],
 }
 
 CORE_COLLECTIONS = (
@@ -486,6 +510,7 @@ SUPPORTING_COLLECTIONS = (
     "ground_truth_labels",
     "model_runs",
     "evaluation_results",
+    "lifecycle_events",
 )
 
 COLLECTION_NAMES = CORE_COLLECTIONS + SUPPORTING_COLLECTIONS

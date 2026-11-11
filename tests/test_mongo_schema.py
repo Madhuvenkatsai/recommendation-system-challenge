@@ -22,20 +22,37 @@ class FakeCollection:
 
 
 class FakeDatabase:
-    def __init__(self, existing: tuple[str, ...] = ()) -> None:
+    def __init__(
+        self,
+        existing: tuple[str, ...] = (),
+        validators: dict[str, dict[str, object]] | None = None,
+    ) -> None:
         self.collections = {name: FakeCollection() for name in existing}
+        self.collection_options = {
+            name: {"validator": validator}
+            for name, validator in (validators or {}).items()
+        }
         self.commands: list[tuple[str, dict[str, object]]] = []
 
     def list_collection_names(self) -> list[str]:
         return list(self.collections)
 
+    def list_collections(self) -> list[dict[str, object]]:
+        return [
+            {"name": name, "options": self.collection_options.get(name, {})}
+            for name in self.collections
+        ]
+
     def create_collection(self, name: str, **options) -> FakeCollection:
         self.commands.append(("create_collection", {"name": name, **options}))
         self.collections[name] = FakeCollection()
+        self.collection_options[name] = options
         return self.collections[name]
 
     def command(self, name: str, collection: str, **options) -> dict[str, str]:
         self.commands.append((name, {"collection": collection, **options}))
+        if name == "collMod":
+            self.collection_options[collection] = options
         return {"ok": "1"}
 
     def __getitem__(self, name: str) -> FakeCollection:
@@ -44,8 +61,8 @@ class FakeDatabase:
 
 def test_schema_and_indexes_cover_all_required_collections() -> None:
     assert len(CORE_COLLECTIONS) == 11
-    assert len(SUPPORTING_COLLECTIONS) == 7
-    assert len(COLLECTION_NAMES) == 18
+    assert len(SUPPORTING_COLLECTIONS) == 8
+    assert len(COLLECTION_NAMES) == 19
     assert set(SCHEMAS) == set(COLLECTION_NAMES)
     assert set(REQUIRED_FIELDS) == set(COLLECTION_NAMES)
     assert set(INDEXES) == set(COLLECTION_NAMES)
@@ -63,6 +80,17 @@ def test_schema_and_indexes_cover_all_required_collections() -> None:
         "ground_truth_label",
     }
     assert "fixture_records" in REQUIRED_FIELDS["anomaly_fixtures"]
+    assert {
+        "entity_type",
+        "entity_id",
+        "previous_state",
+        "new_state",
+        "event_type",
+        "occurred_at",
+        "sequence",
+        "source_type",
+        "source_id",
+    } <= set(REQUIRED_FIELDS["lifecycle_events"])
 
     for collection_name in COLLECTION_NAMES:
         schema = validator_for(collection_name)["$jsonSchema"]
@@ -146,6 +174,22 @@ def test_initialization_updates_existing_collections_idempotently() -> None:
     )
 
 
+def test_initialization_skips_collmod_for_matching_existing_validators() -> None:
+    validators = {
+        name: validator_for(name)
+        for name in COLLECTION_NAMES
+    }
+    db = FakeDatabase(COLLECTION_NAMES, validators)
+
+    report = initialize_database(db)
+
+    assert report.created_collections == ()
+    assert report.updated_collections == ()
+    assert report.index_count == sum(len(specs) for specs in INDEXES.values())
+    assert not [command for command in db.commands if command[0] == "collMod"]
+    assert all(len(db[name].indexes) == len(INDEXES[name]) for name in COLLECTION_NAMES)
+
+
 def test_ground_truth_is_not_in_model_input_repository_bundle() -> None:
     db = FakeDatabase(COLLECTION_NAMES)
 
@@ -155,4 +199,5 @@ def test_ground_truth_is_not_in_model_input_repository_bundle() -> None:
     assert not hasattr(model_inputs, "ground_truth_labels")
     assert not hasattr(model_inputs, "validation_issues")
     assert not hasattr(model_inputs, "anomaly_fixtures")
+    assert not hasattr(model_inputs, "lifecycle_events")
     assert hasattr(evaluation, "ground_truth_labels")

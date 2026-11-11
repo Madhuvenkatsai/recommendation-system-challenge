@@ -12,7 +12,7 @@ from backend.app.api.operations import operation_registry
 from backend.app.api.routes.dashboard import get_dashboard_database
 from backend.app.core.config import MongoConfigurationError
 from backend.app.db.initialize import initialize_database
-from backend.app.db.schema import CORE_COLLECTIONS
+from backend.app.db.schema import COLLECTION_NAMES
 from backend.app.generator.anomalies import AnomalyConfig
 from backend.app.generator.config import GENERATION_SEED, GenerationConfig
 from backend.app.generator.engine import GenerationEngine
@@ -124,6 +124,7 @@ def _run_generation(
     config: GenerationConfig,
     batch_size: int,
     inject_anomalies: bool,
+    output_dir: Path,
 ) -> None:
     try:
         operation_registry.update(job_id, status="running")
@@ -140,7 +141,7 @@ def _run_generation(
             )
         composite = CompositeGenerationTarget(
             MongoGenerationTarget(database),
-            ExportGenerationTarget(Path("generated-data")),
+            ExportGenerationTarget(output_dir),
         )
         target = TrackedGenerationTarget(composite, job_id, database)
         manifest = GenerationEngine(
@@ -181,6 +182,8 @@ def start_generation(
 ) -> dict[str, Any]:
     config = _config_for(request.scale)
     try:
+        if request.scale == "full":
+            database = get_database(collection_prefix="full_")
         database.command("ping")
         run_id = dataset_id(
             "generation_runs",
@@ -192,12 +195,8 @@ def start_generation(
                 status_code=409,
                 detail="This deterministic dataset run already exists; generation will not overwrite it.",
             )
-        guarded_collections = (*CORE_COLLECTIONS, "dataset_splits", "ground_truth_labels", "anomaly_fixtures")
         guarded_collections = (
-            *CORE_COLLECTIONS,
-            "dataset_splits",
-            "ground_truth_labels",
-            "anomaly_fixtures",
+            *COLLECTION_NAMES,
         )
         for collection_name in guarded_collections:
             if database[collection_name].find_one({}, {"_id": 1}):
@@ -257,6 +256,7 @@ def start_generation(
         config,
         request.batch_size,
         request.inject_anomalies,
+        Path("generated-data-full" if request.scale == "full" else "generated-data"),
     )
     return job
 

@@ -421,6 +421,117 @@ def _order_line_records(
         }
 
 
+def _lifecycle_event(
+    index: int,
+    total_events: int,
+    *,
+    entity_type: str,
+    entity_id: str,
+    previous_state: str | None,
+    new_state: str,
+    event_type: str,
+    occurred_at: datetime,
+    sequence: int,
+    source_id: str,
+    reference_id: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "_id": make_id("lifecycle_events", index, total_events),
+        "entity_type": entity_type,
+        "entity_id": entity_id,
+        "previous_state": previous_state,
+        "new_state": new_state,
+        "event_type": event_type,
+        "occurred_at": occurred_at,
+        "sequence": sequence,
+        "source_type": "generation",
+        "source_id": source_id,
+        "reference_id": reference_id,
+        "metadata": {},
+    }
+
+
+def _lifecycle_event_records(config: GenerationConfig) -> Iterator[dict[str, Any]]:
+    event_index = 0
+    total_events = config.cart_count * 2 + config.orders * 4
+    for cart_index in range(config.cart_count):
+        cart = _cart_record(config, cart_index)
+        cart_id = cart["_id"]
+        yield _lifecycle_event(
+            event_index,
+            total_events,
+            entity_type="cart",
+            entity_id=cart_id,
+            previous_state=None,
+            new_state="active",
+            event_type="created",
+            occurred_at=cart["created_at"],
+            sequence=1,
+            source_id=cart_id,
+        )
+        event_index += 1
+        if cart["status"] != "active":
+            reference_id = None
+            order_index = _order_index_for_cart(config, cart_index)
+            if order_index is not None:
+                reference_id = make_id("orders", order_index, config.orders)
+            yield _lifecycle_event(
+                event_index,
+                total_events,
+                entity_type="cart",
+                entity_id=cart_id,
+                previous_state="active",
+                new_state=cart["status"],
+                event_type="status_changed",
+                occurred_at=cart["converted_at"] or cart["updated_at"],
+                sequence=2,
+                source_id=cart_id,
+                reference_id=reference_id,
+            )
+            event_index += 1
+
+    for order_index in range(config.orders):
+        order = _order_record(config, order_index)
+        order_id = order["_id"]
+        placed_at = order["placed_at"]
+        yield _lifecycle_event(
+            event_index,
+            total_events,
+            entity_type="order",
+            entity_id=order_id,
+            previous_state=None,
+            new_state="pending",
+            event_type="created",
+            occurred_at=placed_at,
+            sequence=1,
+            source_id=order_id,
+            reference_id=order["cart_id"],
+        )
+        event_index += 1
+        transitions = {
+            "completed": ("paid", "completed"),
+            "cancelled": ("cancelled",),
+            "refunded": ("paid", "completed", "refunded"),
+        }[order["status"]]
+        previous_state = "pending"
+        for sequence, new_state in enumerate(transitions, start=2):
+            yield _lifecycle_event(
+                event_index,
+                total_events,
+                entity_type="order",
+                entity_id=order_id,
+                previous_state=previous_state,
+                new_state=new_state,
+                event_type="status_changed",
+                occurred_at=placed_at + timedelta(minutes=sequence - 1),
+                sequence=sequence,
+                source_id=order_id,
+                reference_id=order["cart_id"],
+            )
+            event_index += 1
+            previous_state = new_state
+
+
 def _category_partner(category_index: int, category_count: int) -> int:
     if category_index < ROOT_CATEGORY_COUNT:
         first_child = ROOT_CATEGORY_COUNT + category_index * CHILDREN_PER_ROOT
@@ -552,6 +663,8 @@ def iter_collection(
     elif collection_name == "orders":
         for index in range(config.orders):
             yield _order_record(config, index)
+    elif collection_name == "lifecycle_events":
+        yield from _lifecycle_event_records(config)
     elif collection_name == "order_lines":
         for order_index in range(config.orders):
             for record in _order_line_records(config, order_index):

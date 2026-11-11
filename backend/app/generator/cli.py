@@ -3,6 +3,7 @@ from pathlib import Path
 
 from backend.app.db.initialize import initialize_database
 from backend.app.db.mongo import get_database
+from backend.app.db.schema import COLLECTION_NAMES
 from backend.app.generator.anomalies import ANOMALY_TYPES, AnomalyConfig
 from backend.app.generator.config import GenerationConfig
 from backend.app.generator.engine import GenerationEngine
@@ -26,8 +27,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("generated-data"),
-        help="Directory for CSV, JSON Lines, and manifest exports.",
+        default=None,
+        help="Directory for CSV, JSON, JSONL, SQL, and manifest exports.",
     )
     parser.add_argument(
         "--batch-size",
@@ -57,11 +58,23 @@ def main() -> None:
         if args.scale == "starter"
         else GenerationConfig.full()
     )
-    database = get_database()
+    collection_prefix = "full_" if args.scale == "full" else None
+    database = get_database(collection_prefix=collection_prefix)
+    for collection_name in COLLECTION_NAMES:
+        if database[collection_name].find_one({}, {"_id": 1}):
+            raise RuntimeError(
+                f"Collection namespace for {args.scale!r} generation already "
+                f"contains data ('{collection_name}'); refusing to overwrite it."
+            )
     initialize_database(database)
+    output_dir = args.output_dir or (
+        Path("generated-data-full")
+        if args.scale == "full"
+        else Path("generated-data")
+    )
     target = CompositeGenerationTarget(
         MongoGenerationTarget(database),
-        ExportGenerationTarget(args.output_dir),
+        ExportGenerationTarget(output_dir),
     )
     manifest = GenerationEngine(
         config,
@@ -75,7 +88,7 @@ def main() -> None:
         f"{manifest.collection_counts['sessions']} sessions, "
         f"{manifest.collection_counts['orders']} orders."
     )
-    print(f"CSV/JSONL exports and manifest: {args.output_dir.resolve()}")
+    print(f"CSV/JSONL/JSON/SQL exports and manifest: {output_dir.resolve()}")
 
 
 if __name__ == "__main__":

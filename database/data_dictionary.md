@@ -48,6 +48,7 @@ sequence.
 | Ground-truth label / `ground_truth_labels` | `GTL########` |
 | Dataset split / `dataset_splits` | `SPL` + dataset fingerprint + split name |
 | Generation run / `generation_runs` | `RUN` + dataset fingerprint |
+| Lifecycle event / `lifecycle_events` | `LCE########` |
 | Validation issue / `validation_issues` | `ISS` + 32 uppercase hexadecimal characters |
 | Anomaly fixture / `anomaly_fixtures` | `ANF` + dataset fingerprint + anomaly type |
 
@@ -284,3 +285,26 @@ restrict documents to this generator-specific convention.
 | `evaluated_at` | date | Yes | Evaluation timestamp. |
 | `sample_count` | int | Yes | Non-negative evaluation sample count. |
 | `metrics` | object | Yes | Requires `precision_at_k`, `recall_at_k`, `ndcg_at_k`, `hit_rate_at_k`, `catalog_coverage`, and `cold_start_coverage`; values are numeric in [0, 1] or null when the denominator is unavailable. Also records sample counts, denominators and evaluation status. |
+
+### `lifecycle_events`
+
+| Field | BSON type | Required | Rule / relationship |
+|---|---|---:|---|
+| `_id` | string | Yes | Stable unique lifecycle-event ID. |
+| `entity_type` | string | Yes | `cart` or `order`; together with `entity_id`, identifies the lifecycle owner. |
+| `entity_id` | string | Yes | Reference to the cart/order identified by `entity_type`. |
+| `previous_state` | string or null | Yes | Null for the initial creation event; otherwise must equal the preceding event's `new_state`. |
+| `new_state` | string | Yes | State reached by this event. |
+| `event_type` | string | Yes | `created` for sequence 1, otherwise `status_changed`. |
+| `occurred_at` | date | Yes | UTC transition time; must not precede the previous event for this entity. |
+| `sequence` | int | Yes | Positive, contiguous per-entity sequence; unique with `entity_type` and `entity_id`. |
+| `source_type`, `source_id` | string | Yes | Origin metadata; generated records identify the generator and source entity. |
+| `reference_id` | string or null | No | Related order for a converted cart or source cart for an order. |
+| `metadata` | object | Yes | Extensible transition context. |
+
+Cart transitions are `active` → `converted`, `abandoned` or `cancelled`.
+Order transitions are `pending` → `paid` or `cancelled`, `paid` → `completed`
+or `refunded`, and `completed` → `refunded`. Terminal states cannot transition
+again. The latest `new_state` must match the current cart/order document.
+Existing records without lifecycle events remain valid for backward
+compatibility; no historical transitions are invented during schema upgrade.

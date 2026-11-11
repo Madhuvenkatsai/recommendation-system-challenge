@@ -267,6 +267,148 @@ def validate_references(context: ValidationContext) -> None:
                 )
 
 
+def validate_lifecycle_history(context: ValidationContext) -> None:
+    allowed_transitions = {
+        "cart": {
+            "active": {"converted", "abandoned", "cancelled"},
+        },
+        "order": {
+            "pending": {"paid", "cancelled"},
+            "paid": {"completed", "refunded"},
+            "completed": {"refunded"},
+        },
+    }
+    histories: dict[tuple[str, str], tuple[int, str, datetime]] = {}
+    seen_sequences: set[tuple[str, str, int]] = set()
+    seen_event_ids: set[str] = set()
+
+    events = context.rows("lifecycle_events")
+    if hasattr(events, "batch_size") and hasattr(events, "sort"):
+        events = events.sort(
+            [("entity_type", 1), ("entity_id", 1), ("sequence", 1)]
+        )
+    for event in events:
+        event_id = event.get("_id")
+        entity_type = event.get("entity_type")
+        entity_id = event.get("entity_id")
+        sequence = event.get("sequence")
+        previous_state = event.get("previous_state")
+        new_state = event.get("new_state")
+        occurred_at = event.get("occurred_at")
+        key = (entity_type, entity_id)
+        reference_collection = {
+            "cart": "carts",
+            "order": "orders",
+        }.get(entity_type)
+        if (
+            reference_collection is None
+            or not context.id_exists(reference_collection, entity_id)
+        ):
+            context.emit(
+                "lifecycle_entity_missing",
+                "error",
+                "lifecycle_events",
+                event_id,
+                [event_id, entity_id],
+                "Lifecycle event must reference an existing cart or order.",
+                "lifecycle_entity_missing",
+            )
+            continue
+        if not isinstance(sequence, int) or sequence < 1:
+            context.emit(
+                "lifecycle_sequence_invalid",
+                "error",
+                "lifecycle_events",
+                event_id,
+                [event_id, entity_id],
+                "Lifecycle event sequence must be a positive integer.",
+                "lifecycle_sequence_invalid",
+            )
+            continue
+        sequence_key = (entity_type, entity_id, sequence)
+        if sequence_key in seen_sequences or (
+            isinstance(event_id, str) and event_id in seen_event_ids
+        ):
+            context.emit(
+                "lifecycle_event_duplicate",
+                "error",
+                "lifecycle_events",
+                event_id,
+                [event_id, entity_id],
+                "Lifecycle event ID or entity sequence is duplicated.",
+                "lifecycle_event_duplicate",
+            )
+            continue
+        seen_sequences.add(sequence_key)
+        if isinstance(event_id, str):
+            seen_event_ids.add(event_id)
+
+        prior = histories.get(key)
+        valid = isinstance(occurred_at, datetime)
+        if prior is None:
+            valid = (
+                valid
+                and sequence == 1
+                and previous_state is None
+                and event.get("event_type") == "created"
+                and new_state
+                in ({"active"} if entity_type == "cart" else {"pending"})
+            )
+            entity = (
+                context.carts[entity_id]
+                if entity_type == "cart"
+                else context.orders[entity_id]
+            )
+            expected_start = entity[2] if entity_type == "cart" else entity[3]
+            valid = valid and occurred_at == expected_start
+        else:
+            prior_sequence, prior_state, prior_time = prior
+            valid = (
+                valid
+                and sequence == prior_sequence + 1
+                and occurred_at >= prior_time
+                and previous_state == prior_state
+                and event.get("event_type") == "status_changed"
+                and new_state
+                in allowed_transitions.get(entity_type, {}).get(prior_state, set())
+            )
+        reference_id = event.get("reference_id")
+        if reference_id is not None:
+            if entity_type == "cart":
+                related_order = context.orders.get(reference_id)
+                valid = valid and related_order is not None and related_order[2] == entity_id
+            else:
+                valid = valid and reference_id == context.orders[entity_id][2]
+        if not valid:
+            context.emit(
+                "lifecycle_transition_invalid",
+                "error",
+                "lifecycle_events",
+                event_id,
+                [event_id, entity_id],
+                "Lifecycle event has invalid ordering, timestamp, or state transition.",
+                "lifecycle_transition_invalid",
+            )
+            continue
+        histories[key] = (sequence, new_state, occurred_at)
+
+    for (entity_type, entity_id), (_, final_state, _) in histories.items():
+        if entity_type == "cart":
+            expected_state = context.carts[entity_id][5]
+        else:
+            expected_state = context.orders[entity_id][4]
+        if final_state != expected_state:
+            context.emit(
+                "lifecycle_final_state_mismatch",
+                "error",
+                "lifecycle_events",
+                entity_id,
+                [entity_id],
+                "Latest lifecycle state does not match the entity's current state.",
+                "lifecycle_final_state_mismatch",
+            )
+
+
 def validate_category_hierarchy(context: ValidationContext) -> None:
     for category_id, parent_id in context.categories.items():
         visited = {category_id}

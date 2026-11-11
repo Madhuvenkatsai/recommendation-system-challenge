@@ -1,0 +1,1 @@
+_id,issue_id,issue_type,severity,entity_type,entity_id,source_record_ids,generation_run_id,detected_at,description,ground_truth_label

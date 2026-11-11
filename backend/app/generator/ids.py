@@ -15,6 +15,7 @@ ID_PREFIXES = {
     "ground_truth_labels": "GTL",
     "dataset_splits": "SPL",
     "generation_runs": "RUN",
+    "lifecycle_events": "LCE",
 }
 
 

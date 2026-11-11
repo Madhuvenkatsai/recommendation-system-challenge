@@ -3,10 +3,11 @@
 The project has separate React + Vite frontend, FastAPI backend, and MongoDB
 database layers. MongoDB schemas and indexes are initialized by an idempotent
 script. A deterministic synthetic data generator supports starter/full scales,
-optional isolated anomaly fixtures, MongoDB writes and CSV/JSONL exports. An
-application validator exports traceable validation issues and summaries. The
-FastAPI recommendation API implements popularity, content-based and hybrid
-recommendation strategies plus test-split evaluation metrics.
+optional isolated anomaly fixtures, MongoDB writes and CSV, JSON, JSONL and
+relational SQL exports. Append-only cart/order lifecycle events preserve state
+transitions. An application validator exports traceable findings. The
+recommendation API implements popularity, content-based and hybrid strategies
+plus held-out evaluation metrics.
 
 ## Prerequisites
 
@@ -30,10 +31,17 @@ python -m venv .venv
 python -m pip install -r backend\requirements-dev.txt
 ```
 
-Set `MONGODB_URI` to a connection string supplied for your MongoDB instance.
-Optionally set `MONGODB_DATABASE` (defaults to `product_recommendations`).
-`.env.example` documents the variables but is not loaded automatically; do not
-put real credentials in tracked files.
+Copy `.env.example` to `.env` in the workspace root and replace its placeholders
+with values supplied for your MongoDB instance. The backend loads that root
+`.env` independently of the current working directory. Environment variables
+already supplied by the process take precedence over values in `.env`.
+`MONGODB_URI` is required; `MONGODB_DATABASE` defaults to
+`recommendation_challenge` if omitted. `MONGODB_COLLECTION_PREFIX` optionally
+selects a collection namespace such as `full_` without changing the database.
+`CORS_ALLOWED_ORIGINS` optionally sets comma-separated production frontend
+origins; by default only local Vite development/preview origins are accepted.
+The root `.env` is excluded from Git; do not put real credentials in tracked
+files.
 
 Start the API from the workspace root:
 
@@ -70,20 +78,35 @@ workspace root:
 .\.venv\Scripts\python.exe -m backend.app.generator.cli --scale starter
 ```
 
-The default starter mode writes under `generated-data/` (ignored by Git). For
-the full challenge volumes:
+The default starter mode writes under `generated-data/` (ignored by Git). Full
+scale automatically uses `full_`-prefixed collections in the same MongoDB
+database and writes exports under `generated-data-full/`, preserving the
+existing starter dataset and avoiding sequential-ID collisions:
 
 ```powershell
 .\.venv\Scripts\python.exe -m backend.app.generator.cli --scale full
 ```
 
-Both use seed `20261022`. CSV and JSON Lines files are produced per collection,
-along with `manifest.json` containing row counts and SHA-256 checksums. The
-checksums cover deterministic dataset rows and exclude `generation_runs`,
-whose audit timestamps reflect wall-clock execution. Full scale writes
+Both use seed `20261022`. CSV, standard JSON arrays, JSON Lines, and a
+relational SQL seed script are exported with `manifest.json` containing row
+counts and SHA-256 checksums. The SQL script is SQLite-compatible and is an
+export representation only; MongoDB remains the runtime system of record.
+Existing export files are never overwritten. The manifest checksums cover
+export files and deterministic dataset rows; the manifest itself is excluded
+because it contains those checksums. Deterministic row hashes exclude
+`generation_runs`, whose timestamps reflect execution. Full scale writes
 20,000 customers, 10,000 products, 500,000 sessions and 100,000 orders;
 counts for derived collections are described in the
 [generation rules](docs/data_generation.md).
+
+A verified starter export bundle is available under
+`exports/starter-submission/`. It is a reproducible generator snapshot, not a
+MongoDB dump; persisted recommendation and evaluation results remain in
+MongoDB.
+
+To browse the isolated full-scale namespace through the API, set
+`MONGODB_COLLECTION_PREFIX=full_` before starting FastAPI. The normal default
+continues to show the existing unprefixed starter data.
 
 Anomaly fixtures are opt-in and remain separate from baseline entity records:
 
@@ -106,7 +129,8 @@ leakage and discontinued/unavailable recommendations. See the
 
 ## Recommendation API
 
-The recommendation endpoints use training-window inputs only. They persist
+The recommendation endpoints use training-window inputs only; lifecycle history
+is audit data and is not a model feature. They persist
 recommendation records, model runs and held-out evaluation results to MongoDB.
 Set the supplied `MONGODB_URI`, initialize the schema and generate a dataset
 before calling them.
@@ -137,16 +161,28 @@ outside model-input repositories and the recommendation request API.
 The React dashboard includes a system overview, deterministic data generation,
 product catalog, recommendation explorer, validation issue browser and model
 evaluation comparison. It reads business data through FastAPI; MongoDB
-credentials are never placed in the frontend.
+credentials are never placed in the frontend. The dashboard shows live counts
+for all 11 core entities and eight supporting collections. Customers, products,
+sessions and orders are compared with their separate full-scale challenge
+targets; a starter count is never represented as full-scale completion.
 
 Copy `frontend\.env.example` to `frontend\.env.local` when the backend is not
 using its local default URL, and set `VITE_API_BASE_URL` to the FastAPI origin.
 The backend permits local Vite development origins on ports 5173 and 4173.
+For production, set `VITE_API_BASE_URL` to the public API origin and configure
+that exact frontend origin in `CORS_ALLOWED_ORIGINS`.
+
+```powershell
+Set-Location C:\CandidateWorkspace
+.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
+
+In another terminal:
 
 ```powershell
 Set-Location C:\CandidateWorkspace\frontend
-npm install
-npm run dev
+npm ci
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
 The dashboard cannot show project records or run database-backed operations
@@ -169,3 +205,9 @@ tests run without requiring a MongoDB server. Frontend checks run from
 `frontend\` using `npm run build` and `npm run lint`. Live database-backed
 dashboard, generation, catalog, validation, recommendation and evaluation
 features require the supplied MongoDB connection.
+
+## End-to-end walkthrough
+
+See the [project walkthrough](docs/walkthrough.md) for the architecture,
+generation, storage, validation, anomaly, recommendation, evaluation,
+dashboard, export and reproducibility steps.

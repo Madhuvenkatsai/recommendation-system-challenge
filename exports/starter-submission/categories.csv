@@ -1,0 +1,13 @@
+_id,name,slug,parent_category_id,seasonal_tags,active_from,active_to,created_at,updated_at
+CAT00000001,Spring Collection 01,spring-collection-01,,"[""spring""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000002,Summer Collection 02,summer-collection-02,,"[""summer""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000003,Autumn Collection 03,autumn-collection-03,,"[""autumn""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000004,Winter Collection 04,winter-collection-04,,"[""winter""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000005,Spring Collection 05,spring-collection-05,,"[""spring""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000006,Summer Collection 06,summer-collection-06,,"[""summer""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000007,Autumn Collection 07,autumn-collection-07,,"[""autumn""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000008,Winter Collection 08,winter-collection-08,,"[""winter""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000009,Spring Category 09,spring-category-09,CAT00000001,"[""spring""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000010,Spring Category 10,spring-category-10,CAT00000001,"[""spring""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000011,Spring Category 11,spring-category-11,CAT00000001,"[""spring""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00
+CAT00000012,Spring Category 12,spring-category-12,CAT00000001,"[""spring""]",,,2024-01-01T00:00:00+00:00,2024-01-01T00:00:00+00:00

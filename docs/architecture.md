@@ -9,28 +9,34 @@
   boundary tests.
 
 MongoDB configuration is supplied through `MONGODB_URI` and
-`MONGODB_DATABASE`; no credentials or fallback database are provided. The API
-can start without MongoDB configured. `GET /health` checks API liveness;
+`MONGODB_DATABASE` in the process environment or the workspace-root `.env`;
+process environment values take precedence. No credentials or fallback
+database are provided. PyMongo decodes stored timestamps as timezone-aware UTC
+values. The API can start without MongoDB configured. `GET /health` checks API liveness;
 `GET /api/v1/health` pings MongoDB and reports an explicit 503 status when it
 is missing or unavailable.
 
 `backend.app.db.schema` defines validators and indexes for all 11 core entity
-collections and seven supporting collections. Run
+collections and eight supporting collections, including append-only
+`lifecycle_events`. Run
 `python -m backend.app.db.initialize` from the workspace root with a supplied
-MongoDB connection to create/update the schema. Initialization creates no
-application documents. Collection and field details are in the
+MongoDB connection to create/update the schema. It skips unchanged validators
+and ensures named indexes; initialization creates no application documents.
+Collection and field details are in the
 [data dictionary](../database/data_dictionary.md) and
 [relationship guide](../database/relationships.md).
 
 Model-input repositories intentionally do not expose `ground_truth_labels`,
-`validation_issues` or `anomaly_fixtures`; labels are available through the
+`validation_issues`, `anomaly_fixtures` or `lifecycle_events`; labels are available through the
 separate evaluation repository bundle, and anomaly/validation data through
 the validation repository bundle. MongoDB validators enforce document-level
 shapes, while reference existence, lifecycle, arithmetic and temporal/split
 invariants require application-level validation.
 
 The fixed-seed generator streams source records through bounded MongoDB and
-export targets. Chronological split records are derived from event timestamps;
+CSV, JSON, JSONL and relational SQL export targets. Full-scale data uses
+`full_`-prefixed collections in the same database, isolating it from existing
+starter IDs and model inputs. Chronological split records are derived from event timestamps;
 completed validation/test order lines are separately copied into
 `ground_truth_labels`; recommendation, model and evaluation result documents
 are not synthesized by the generator. See the [generation rules](data_generation.md).
@@ -40,7 +46,8 @@ Controlled anomaly fixtures are optional and are persisted in
 `backend.app.validation` engine streams findings in bounded batches to
 `validation_issues` and issue-level CSV/JSONL plus summary exports. It checks
 references, hierarchy, chronology, arithmetic, lifecycle, split isolation,
-recommendation eligibility and duplicate events. The repository has unit
+recommendation eligibility, append-only transition ordering and duplicate
+events. The repository has unit
 coverage for these paths; live MongoDB reads/writes require a supplied,
 reachable MongoDB connection.
 
@@ -58,4 +65,6 @@ localhost/127.0.0.1 Vite development and preview origins. Generation and
 validation use the existing bounded engines and targets; operation status is
 process-local and is not durable across API restarts. Data generation refuses
 to write into collections that already contain records rather than silently
-overwriting them. See the [frontend integration notes](frontend.md).
+overwriting them. `MONGODB_COLLECTION_PREFIX` selects an isolated collection
+namespace for the API, while `CORS_ALLOWED_ORIGINS` configures exact production
+origins. See the [frontend integration notes](frontend.md).

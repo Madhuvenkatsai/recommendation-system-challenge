@@ -18,7 +18,11 @@ frontend/dist/
 # Generated datasets and exports
 /data/
 /generated-data/
-/exports/
+/generated-data-full/
+/validation-output/
+/exports/*
+!/exports/starter-submission/
+!/exports/starter-submission/**
 *.generated.csv
 *.generated.json
 *.generated.jsonl

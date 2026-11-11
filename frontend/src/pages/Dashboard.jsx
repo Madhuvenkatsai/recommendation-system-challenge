@@ -1,27 +1,55 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api.js'
-import { EmptyState, ErrorNotice, LoadingState, MetricCard, PageHeader, Panel, StatusPill } from '../components/UI.jsx'
+import { EmptyState, ErrorNotice, LoadingState, PageHeader, Panel, StatusPill } from '../components/UI.jsx'
 import { formatDate, formatNumber, percent } from '../components/format.js'
 
-const collectionCards = [
-  ['customers', 'Customers', 'overview', 'blue'],
-  ['products', 'Products', 'catalog', 'violet'],
-  ['sessions', 'Sessions', 'recommend', 'amber'],
-  ['orders', 'Orders', 'evaluation', 'green'],
+const coreEntities = [
+  ['customers', 'Customers', 20_000],
+  ['products', 'Products', 10_000],
+  ['categories', 'Categories'],
+  ['sessions', 'Sessions', 500_000],
+  ['page_views', 'Page views'],
+  ['carts', 'Carts'],
+  ['cart_lines', 'Cart lines'],
+  ['orders', 'Orders', 100_000],
+  ['order_lines', 'Order lines'],
+  ['product_relations', 'Product relations'],
+  ['recommendations', 'Recommendations'],
 ]
+
+const supportingCollections = [
+  ['generation_runs', 'Generation runs'],
+  ['lifecycle_events', 'Lifecycle events'],
+  ['validation_issues', 'Validation issues'],
+  ['anomaly_fixtures', 'Anomaly fixtures'],
+  ['dataset_splits', 'Dataset splits'],
+  ['ground_truth_labels', 'Ground-truth labels'],
+  ['model_runs', 'Model runs'],
+  ['evaluation_results', 'Evaluation results'],
+]
+
+function progressText(actual, target) {
+  if (actual === null || actual === undefined || !target) return '—'
+  return `${Number(((actual / target) * 100).toFixed(1))}%`
+}
 
 export default function Dashboard({ onNavigate, onConnection }) {
   const [overview, setOverview] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [reload, setReload] = useState(0)
-  const refresh = useCallback(() => setReload((value) => value + 1), [])
+  const refresh = useCallback(() => {
+    setOverview(null)
+    setError(null)
+    setLoading(true)
+    setReload((value) => value + 1)
+  }, [])
 
   useEffect(() => {
     let active = true
     api.overview()
       .then((data) => { if (active) { setOverview(data); setError(null); onConnection?.(data.database?.status || 'unknown') } })
-      .catch((cause) => { if (active) { setError(cause); onConnection?.('unavailable') } })
+      .catch((cause) => { if (active) { setOverview(null); setError(cause); onConnection?.('unavailable') } })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [reload, onConnection])
@@ -46,13 +74,42 @@ export default function Dashboard({ onNavigate, onConnection }) {
             <StatusPill status={overview?.database?.status || (error ? 'unavailable' : 'unknown')} label={overview?.database?.status || (error ? 'unavailable' : 'unknown')} />
           </div>
 
-          <div className="metric-grid">
-            {collectionCards.map(([key, label, icon, tone]) => (
-              <MetricCard key={key} label={`Total ${label.toLowerCase()}`} value={formatNumber(overview?.counts?.[key])} icon={icon} tone={tone} note="Current database count" />
-            ))}
-          </div>
-
           <div className="dashboard-grid">
+            <Panel title="Core entity counts" subtitle="Live persisted MongoDB counts compared with the full-scale challenge targets." className="wide-panel">
+              <div className="entity-count-grid">
+                {coreEntities.map(([key, label, challengeTarget]) => {
+                  const actual = overview?.counts?.[key]
+                  const target = overview?.full_scale_targets?.[key] ?? challengeTarget
+                  return (
+                    <article className="entity-count-card" key={key}>
+                      <span className="entity-count-label">{label}</span>
+                      <strong className="entity-count-value">{formatNumber(actual)}</strong>
+                      <span className="entity-count-target">
+                        {target === undefined ? 'Full-scale target not specified' : `Full-scale target ${formatNumber(target)}`}
+                      </span>
+                      {target !== undefined && (
+                        <div className="entity-progress" aria-label={`${label} progress ${progressText(actual, target)}`}>
+                          <div className="entity-progress-track"><i style={{ width: `${actual === null || actual === undefined ? 0 : Math.min(100, (actual / target) * 100)}%` }} /></div>
+                          <span>{progressText(actual, target)} of target</span>
+                        </div>
+                      )}
+                    </article>
+                  )
+                })}
+              </div>
+            </Panel>
+
+            <Panel title="Supporting collection counts" subtitle="Live counts for audit, validation, split, label, and evaluation collections." className="wide-panel">
+              <div className="supporting-count-grid">
+                {supportingCollections.map(([key, label]) => (
+                  <div className="supporting-count-card" key={key}>
+                    <span>{label}</span>
+                    <strong>{formatNumber(overview?.counts?.[key])}</strong>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
             <Panel title="Dataset generation" subtitle="Most recent persisted generation run" action={<button className="text-button" onClick={() => onNavigate('generation')}>Open generation <span>→</span></button>}>
               {overview?.generation?.latest_run ? (
                 <div className="workflow-content">

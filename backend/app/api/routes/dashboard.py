@@ -9,11 +9,19 @@ from pymongo.errors import PyMongoError
 from backend.app.api.operations import operation_registry
 from backend.app.core.config import MongoConfigurationError
 from backend.app.db.mongo import get_database
-from backend.app.db.schema import CORE_COLLECTIONS
+from backend.app.db.schema import COLLECTION_NAMES, CORE_COLLECTIONS
+from backend.app.generator.config import GenerationConfig
 from backend.app.recommendations.service import RecommendationService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
+
+FULL_SCALE_TARGETS = {
+    "customers": GenerationConfig.full().customers,
+    "products": GenerationConfig.full().products,
+    "sessions": GenerationConfig.full().sessions,
+    "orders": GenerationConfig.full().orders,
+}
 
 
 def get_dashboard_database() -> Any:
@@ -41,6 +49,18 @@ def _latest_generation(database: Any) -> dict[str, Any] | None:
     )
 
 
+def _completed_validation_summary(summary: dict[str, Any]) -> dict[str, Any]:
+    result = {"status": "completed", **summary}
+    if not result.get("detail"):
+        issue_count = result.get("issue_count")
+        if issue_count is None:
+            result["detail"] = "Validation completed."
+        else:
+            noun = "issue" if issue_count == 1 else "issues"
+            result["detail"] = f"Validation completed with {issue_count} {noun}."
+    return result
+
+
 def _validation_summary(
     database: Any, generation_run: dict[str, Any] | None
 ) -> dict[str, Any]:
@@ -59,7 +79,7 @@ def _validation_summary(
     run_id = generation_run["_id"]
     stored_summary = generation_run.get("validation_summary")
     if isinstance(stored_summary, dict):
-        return {"status": "completed", **stored_summary}
+        return _completed_validation_summary(stored_summary)
     summary_path = (
         Path("validation-output") / run_id / "validation_summary.json"
     )
@@ -73,7 +93,7 @@ def _validation_summary(
             logger.exception("Could not read the validation summary export")
             saved = None
         if saved and saved.get("generation_run_id") == run_id:
-            return {"status": "completed", **saved}
+            return _completed_validation_summary(saved)
 
     issues = database["validation_issues"]
     issue_count = issues.count_documents({"generation_run_id": run_id})
@@ -118,7 +138,7 @@ def _validation_summary(
         and latest_job.get("status") == "completed"
         and latest_job.get("result", {}).get("generation_run_id") == run_id
     ):
-        return {"status": "completed", **latest_job["result"]}
+        return _completed_validation_summary(latest_job["result"])
     return {
         "status": "not_run",
         "generation_run_id": run_id,
@@ -140,7 +160,7 @@ def get_dashboard_overview(
         generation_run = _latest_generation(database)
         counts = {
             collection: database[collection].count_documents({})
-            for collection in ("customers", "products", "sessions", "orders")
+            for collection in COLLECTION_NAMES
         }
         latest_evaluations = list(
             database["evaluation_results"]
@@ -169,6 +189,7 @@ def get_dashboard_overview(
                 "name": database.name,
             },
             "counts": counts,
+            "full_scale_targets": FULL_SCALE_TARGETS,
             "generation": {
                 "status": (
                     generation_run["status"] if generation_run else "not_generated"

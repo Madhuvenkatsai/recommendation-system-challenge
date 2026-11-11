@@ -24,6 +24,7 @@ GENERATION_ORDER = (
     "carts",
     "cart_lines",
     "orders",
+    "lifecycle_events",
     "order_lines",
     "product_relations",
     "dataset_splits",

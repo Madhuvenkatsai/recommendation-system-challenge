@@ -1,0 +1,1 @@
+_id,customer_id,session_id,model_run_id,generation_run_id,strategy,k,model_version,source_interaction_ids,requested_at,as_of_time,training_cutoff,purchased_exclusion_rule,status,items

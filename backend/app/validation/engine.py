@@ -14,6 +14,7 @@ from backend.app.validation.validators import (
     validate_cart_and_order_arithmetic,
     validate_category_hierarchy,
     validate_lifecycle_and_availability,
+    validate_lifecycle_history,
     validate_references,
     validate_session_and_event_chronology,
     validate_split_chronology,
@@ -156,6 +157,7 @@ class ValidationEngine:
             validate_session_and_event_chronology(context)
             validate_cart_and_order_arithmetic(context)
             validate_lifecycle_and_availability(context)
+            validate_lifecycle_history(context)
             validate_split_chronology(context)
             validate_anomaly_fixtures(context)
             if batch:

@@ -20,7 +20,10 @@ class InitializationReport:
 def initialize_database(database: Any | None = None) -> InitializationReport:
     """Create or update MongoDB validators and indexes without inserting data."""
     db = database if database is not None else get_database()
-    existing = set(db.list_collection_names())
+    collection_info = {
+        item["name"]: item for item in db.list_collections()
+    }
+    existing = set(collection_info)
     created: list[str] = []
     updated: list[str] = []
     index_count = 0
@@ -28,14 +31,18 @@ def initialize_database(database: Any | None = None) -> InitializationReport:
     for collection_name in COLLECTION_NAMES:
         validator = validator_for(collection_name)
         if collection_name in existing:
-            db.command(
-                "collMod",
-                collection_name,
-                validator=validator,
-                validationLevel="strict",
-                validationAction="error",
-            )
-            updated.append(collection_name)
+            current_validator = collection_info[collection_name].get(
+                "options", {}
+            ).get("validator")
+            if current_validator != validator:
+                db.command(
+                    "collMod",
+                    collection_name,
+                    validator=validator,
+                    validationLevel="strict",
+                    validationAction="error",
+                )
+                updated.append(collection_name)
         else:
             db.create_collection(
                 collection_name,

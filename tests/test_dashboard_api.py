@@ -164,14 +164,77 @@ def test_dashboard_overview_returns_actual_counts_and_validation_data():
     assert body["counts"] == {
         "customers": 2,
         "products": 1,
+        "categories": 0,
         "sessions": 3,
+        "page_views": 0,
+        "carts": 0,
+        "cart_lines": 0,
         "orders": 1,
+        "order_lines": 0,
+        "product_relations": 0,
+        "recommendations": 0,
+        "generation_runs": 1,
+        "lifecycle_events": 0,
+        "validation_issues": 1,
+        "anomaly_fixtures": 0,
+        "dataset_splits": 0,
+        "ground_truth_labels": 0,
+        "model_runs": 0,
+        "evaluation_results": 0,
+    }
+    assert body["full_scale_targets"] == {
+        "customers": 20_000,
+        "products": 10_000,
+        "sessions": 500_000,
+        "orders": 100_000,
     }
     assert body["generation"]["latest_run"]["_id"] == run["_id"]
     assert body["validation"]["status"] == "completed"
     assert body["validation"]["issue_count"] == 1
     assert body["validation"]["counts_by_severity"] == {"warning": 1}
     assert body["recommendations"]["ground_truth_labels_are_model_inputs"] is False
+
+
+def test_dashboard_overview_reports_zero_counts_for_connected_empty_database():
+    database = Database({})
+    app.dependency_overrides[get_dashboard_database] = lambda: database
+
+    response = anyio.run(call, "GET", "/api/v1/dashboard/overview")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["database"]["status"] == "connected"
+    assert body["counts"] == {
+        "customers": 0,
+        "products": 0,
+        "categories": 0,
+        "sessions": 0,
+        "page_views": 0,
+        "carts": 0,
+        "cart_lines": 0,
+        "orders": 0,
+        "order_lines": 0,
+        "product_relations": 0,
+        "recommendations": 0,
+        "generation_runs": 0,
+        "lifecycle_events": 0,
+        "validation_issues": 0,
+        "anomaly_fixtures": 0,
+        "dataset_splits": 0,
+        "ground_truth_labels": 0,
+        "model_runs": 0,
+        "evaluation_results": 0,
+    }
+    assert body["full_scale_targets"] == {
+        "customers": 20_000,
+        "products": 10_000,
+        "sessions": 500_000,
+        "orders": 100_000,
+    }
+    assert body["generation"]["status"] == "not_generated"
+    assert body["generation"]["latest_run"] is None
+    assert body["validation"]["status"] == "not_available"
+    assert body["latest_evaluations"] == []
 
 
 def test_catalog_search_filters_and_paginates_real_database_records():
@@ -270,6 +333,27 @@ def test_clean_completed_validation_summary_is_not_reported_as_not_run():
     assert result["status"] == "completed"
     assert result["issue_count"] == 0
     assert result["clean_record_count"] == 12
+
+
+def test_dashboard_completed_validation_has_a_completed_detail():
+    generation_run = {
+        "_id": "RUN_DASHBOARD_VALIDATION_DETAIL",
+        "status": "completed",
+        "validation_summary": {
+            "generation_run_id": "RUN_DASHBOARD_VALIDATION_DETAIL",
+            "issue_count": 4,
+        },
+    }
+    database = Database({"generation_runs": [generation_run]})
+    app.dependency_overrides[get_dashboard_database] = lambda: database
+
+    response = anyio.run(call, "GET", "/api/v1/dashboard/overview")
+
+    assert response.status_code == 200
+    result = response.json()["validation"]
+    assert result["status"] == "completed"
+    assert result["issue_count"] == 4
+    assert result["detail"] == "Validation completed with 4 issues."
 
 
 def test_local_development_cors_allows_vite_origin_and_blocks_unknown_origin():

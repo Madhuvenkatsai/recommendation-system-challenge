@@ -1,0 +1,422 @@
+{
+  "checksum_scope": "Dataset collection rows only; generation_runs is excluded because its audit timestamps record wall-clock execution.",
+  "checksums": {
+    "anomaly_fixtures": "be464a09fdf645ee5fe586414c0fe9d5661e5048d62c64f49ba2bf1d3d91e479",
+    "cart_lines": "211c45efda68c07bcc0bd428443c9e294a65c43d12e9b27a5d9d788634292699",
+    "carts": "83a1a83f0401c4b4d52a812ee6ea10830289b80188f7d675d431dcdea0e3c9fc",
+    "categories": "779d1ae93058c55f42f6a782696a0ac18db3c8fbf16f38e83334cce1ba45f55f",
+    "customers": "de6c4e156841b5017ac9724c780e47e4e66a3b02d8ec88651e223c9a241acb6b",
+    "dataset_splits": "bcee01db4eeafb8b270b41d5f6892a5e840610fbd6ef58faf64adc207af1be36",
+    "evaluation_results": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ground_truth_labels": "b4343269deec022034f452fb9029edfaf88835512b761591e920b2ea87634836",
+    "lifecycle_events": "8470ad679138bc9d3ca4365686c48f3d3be00b330c3c878dc7450466bc94d4dd",
+    "model_runs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "order_lines": "f1bf866c6826e42b9abd49a956583139d5d73ba61773408bd9a38b017f1ad0c6",
+    "orders": "36b90972ad44dce77548fa1147e0eb8e561a86393851db30bc4ccc0334074b87",
+    "page_views": "c928f6d7850141ff2b53c1da844c8ae7d370d308726d2e2cd23d59378995e362",
+    "product_relations": "30a9d2f4e80e94ac4bca81975b47abc3763f6154aaa987f49c25ba26b4063e84",
+    "products": "bcd92bae2469362f065327560b6384ec5a54c3c01349c4533f9186fe5193684c",
+    "recommendations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sessions": "4167337f24a35dde1ad31f662d0f0667490bc347623befc8ab66dff81dd5acdd",
+    "validation_issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "collection_counts": {
+    "anomaly_fixtures": 4,
+    "cart_lines": 2154,
+    "carts": 1250,
+    "categories": 12,
+    "customers": 200,
+    "dataset_splits": 3,
+    "evaluation_results": 0,
+    "generation_runs": 1,
+    "ground_truth_labels": 238,
+    "lifecycle_events": 3775,
+    "model_runs": 0,
+    "order_lines": 846,
+    "orders": 500,
+    "page_views": 7398,
+    "product_relations": 180,
+    "products": 100,
+    "recommendations": 0,
+    "sessions": 2500,
+    "validation_issues": 0
+  },
+  "completed_at": "2026-11-11T11:21:51.853335+00:00",
+  "configuration": {
+    "anomaly_injection": {
+      "enabled": true,
+      "issue_types": [
+        "purchase_before_session_view",
+        "missing_product_category",
+        "train_test_leakage",
+        "ineligible_product_recommendation"
+      ]
+    },
+    "carts": 1250,
+    "categories": 12,
+    "customers": 200,
+    "end_at": "2026-01-01T00:00:00+00:00",
+    "orders": 500,
+    "page_views_per_session": 3,
+    "products": 100,
+    "seed": 20261022,
+    "sessions": 2500,
+    "start_at": "2024-01-01T00:00:00+00:00"
+  },
+  "dataset_version": "DS4394EF7566842615",
+  "exports": {
+    "files": [
+      {
+        "file_name": "customers.csv",
+        "format": "csv",
+        "row_count": 200,
+        "sha256": "37b5e0cec69b378c4e9e99b993ad4e114f4a6e5dedc6490262a9e4c0ea632ba4"
+      },
+      {
+        "file_name": "customers.jsonl",
+        "format": "jsonl",
+        "row_count": 200,
+        "sha256": "de6c4e156841b5017ac9724c780e47e4e66a3b02d8ec88651e223c9a241acb6b"
+      },
+      {
+        "file_name": "customers.json",
+        "format": "json",
+        "row_count": 200,
+        "sha256": "93b48dfe330b9922fb4143a53179a58e5fd92da8cde429131a237ae085030eeb"
+      },
+      {
+        "file_name": "products.csv",
+        "format": "csv",
+        "row_count": 100,
+        "sha256": "3f6f9cbeceb25293d79876ad46aa10ec9a3400dc85a142467b2eaaaa297e047f"
+      },
+      {
+        "file_name": "products.jsonl",
+        "format": "jsonl",
+        "row_count": 100,
+        "sha256": "bcd92bae2469362f065327560b6384ec5a54c3c01349c4533f9186fe5193684c"
+      },
+      {
+        "file_name": "products.json",
+        "format": "json",
+        "row_count": 100,
+        "sha256": "4de87c7cb8292fa3a7b91abb9715342456a27e909a78a3dbdb58cb2ac323a82e"
+      },
+      {
+        "file_name": "categories.csv",
+        "format": "csv",
+        "row_count": 12,
+        "sha256": "d6e2acb881006c40b2c3ec1afc5cd4e1424f197ed33838bc70165d443152c8a0"
+      },
+      {
+        "file_name": "categories.jsonl",
+        "format": "jsonl",
+        "row_count": 12,
+        "sha256": "779d1ae93058c55f42f6a782696a0ac18db3c8fbf16f38e83334cce1ba45f55f"
+      },
+      {
+        "file_name": "categories.json",
+        "format": "json",
+        "row_count": 12,
+        "sha256": "cfa2b129791f6bc075310719c7d4137c08a3631483636951fa02a3b18e3ca976"
+      },
+      {
+        "file_name": "sessions.csv",
+        "format": "csv",
+        "row_count": 2500,
+        "sha256": "da35728c86defe19968ef72686d1a24eee803cb0d04e952f0ad79e55177a4126"
+      },
+      {
+        "file_name": "sessions.jsonl",
+        "format": "jsonl",
+        "row_count": 2500,
+        "sha256": "4167337f24a35dde1ad31f662d0f0667490bc347623befc8ab66dff81dd5acdd"
+      },
+      {
+        "file_name": "sessions.json",
+        "format": "json",
+        "row_count": 2500,
+        "sha256": "d1e565efe68c2e544bbabcaaabe890382dc08a70ce8e818e4faee44bf0a74aaa"
+      },
+      {
+        "file_name": "page_views.csv",
+        "format": "csv",
+        "row_count": 7398,
+        "sha256": "6fd13431cb2c953a7d34a3ec30a7a8d0370be59fa6992e6cbeef2161fc09ff64"
+      },
+      {
+        "file_name": "page_views.jsonl",
+        "format": "jsonl",
+        "row_count": 7398,
+        "sha256": "c928f6d7850141ff2b53c1da844c8ae7d370d308726d2e2cd23d59378995e362"
+      },
+      {
+        "file_name": "page_views.json",
+        "format": "json",
+        "row_count": 7398,
+        "sha256": "aa91b7d86444c0364484c2ad077c51b2959894a6cd75f954bf181ca3a3229dd9"
+      },
+      {
+        "file_name": "carts.csv",
+        "format": "csv",
+        "row_count": 1250,
+        "sha256": "54e5323feb0df7296deb5215d407e3aa24736218973de80c5f29d97594161f9d"
+      },
+      {
+        "file_name": "carts.jsonl",
+        "format": "jsonl",
+        "row_count": 1250,
+        "sha256": "83a1a83f0401c4b4d52a812ee6ea10830289b80188f7d675d431dcdea0e3c9fc"
+      },
+      {
+        "file_name": "carts.json",
+        "format": "json",
+        "row_count": 1250,
+        "sha256": "78cec3d20bca426811c970bddb9c1c7c228f09a504632018337967fcd3c24d38"
+      },
+      {
+        "file_name": "cart_lines.csv",
+        "format": "csv",
+        "row_count": 2154,
+        "sha256": "34d07daee0139efe6ea753a7d4f1a11c4f8064aa1dbc662bb437d4da7d848b3f"
+      },
+      {
+        "file_name": "cart_lines.jsonl",
+        "format": "jsonl",
+        "row_count": 2154,
+        "sha256": "211c45efda68c07bcc0bd428443c9e294a65c43d12e9b27a5d9d788634292699"
+      },
+      {
+        "file_name": "cart_lines.json",
+        "format": "json",
+        "row_count": 2154,
+        "sha256": "5649b5bb024f3de27bfeca90c941d2bbdd06796a7d04c6d3a2346e97d91cd799"
+      },
+      {
+        "file_name": "orders.csv",
+        "format": "csv",
+        "row_count": 500,
+        "sha256": "2535799e12d6dd7240b333b287235ac6b965170e1197d44ae740ee5aadd60aff"
+      },
+      {
+        "file_name": "orders.jsonl",
+        "format": "jsonl",
+        "row_count": 500,
+        "sha256": "36b90972ad44dce77548fa1147e0eb8e561a86393851db30bc4ccc0334074b87"
+      },
+      {
+        "file_name": "orders.json",
+        "format": "json",
+        "row_count": 500,
+        "sha256": "06b6308720675ecebea01de22f99ce3871e4783f4d3f3b6baa6276e9ab70bb70"
+      },
+      {
+        "file_name": "order_lines.csv",
+        "format": "csv",
+        "row_count": 846,
+        "sha256": "53234ae749210b2cfcdbc308daf8299bd97d0ff2b2e4ecc6e54bc3f973a8d636"
+      },
+      {
+        "file_name": "order_lines.jsonl",
+        "format": "jsonl",
+        "row_count": 846,
+        "sha256": "f1bf866c6826e42b9abd49a956583139d5d73ba61773408bd9a38b017f1ad0c6"
+      },
+      {
+        "file_name": "order_lines.json",
+        "format": "json",
+        "row_count": 846,
+        "sha256": "1a5a6028641263226640356c213949a945898f98ec043b862820a529881c142e"
+      },
+      {
+        "file_name": "product_relations.csv",
+        "format": "csv",
+        "row_count": 180,
+        "sha256": "52d874bed2890b87a01156c44829ed45560a750765492c2b39a25706be3da125"
+      },
+      {
+        "file_name": "product_relations.jsonl",
+        "format": "jsonl",
+        "row_count": 180,
+        "sha256": "30a9d2f4e80e94ac4bca81975b47abc3763f6154aaa987f49c25ba26b4063e84"
+      },
+      {
+        "file_name": "product_relations.json",
+        "format": "json",
+        "row_count": 180,
+        "sha256": "ea289e8cb49b5d71eec8b02a5ef9fa263586b1e46f512af3108f9172c11587e8"
+      },
+      {
+        "file_name": "recommendations.csv",
+        "format": "csv",
+        "row_count": 0,
+        "sha256": "497fd5cb622065ae0176b99d8c8d7b66fcdacef4d2602598f022fb5714ac0b3f"
+      },
+      {
+        "file_name": "recommendations.jsonl",
+        "format": "jsonl",
+        "row_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "file_name": "recommendations.json",
+        "format": "json",
+        "row_count": 0,
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      },
+      {
+        "file_name": "generation_runs.csv",
+        "format": "csv",
+        "row_count": 1,
+        "sha256": "d1e4b9dfb405964f54e2df8e8801188229daccd25981fea99799d17871a663a6"
+      },
+      {
+        "file_name": "generation_runs.jsonl",
+        "format": "jsonl",
+        "row_count": 1,
+        "sha256": "1ccbcb89c08480976c72e5a82f420c84763aad6f54dbff8dc0332028862db52f"
+      },
+      {
+        "file_name": "generation_runs.json",
+        "format": "json",
+        "row_count": 1,
+        "sha256": "9571a4ca8b72818be98ecab629819692f916b1ae4f7e31e188a1a0d2d4c6891a"
+      },
+      {
+        "file_name": "validation_issues.csv",
+        "format": "csv",
+        "row_count": 0,
+        "sha256": "c931809310d3ddab7f85d0377bc28ed9c80748e43b35f7ea4ea1b72532aa56cc"
+      },
+      {
+        "file_name": "validation_issues.jsonl",
+        "format": "jsonl",
+        "row_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "file_name": "validation_issues.json",
+        "format": "json",
+        "row_count": 0,
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      },
+      {
+        "file_name": "anomaly_fixtures.csv",
+        "format": "csv",
+        "row_count": 4,
+        "sha256": "2cdee7630d178d25ddd0ac2deb4bf2f2f7caffb9a55d7e6345cbbdaa0548d4b7"
+      },
+      {
+        "file_name": "anomaly_fixtures.jsonl",
+        "format": "jsonl",
+        "row_count": 4,
+        "sha256": "be464a09fdf645ee5fe586414c0fe9d5661e5048d62c64f49ba2bf1d3d91e479"
+      },
+      {
+        "file_name": "anomaly_fixtures.json",
+        "format": "json",
+        "row_count": 4,
+        "sha256": "52e6070188166afa3683b4a752c7c665b587d3163ca6cd86c388108bf70f954d"
+      },
+      {
+        "file_name": "dataset_splits.csv",
+        "format": "csv",
+        "row_count": 3,
+        "sha256": "51e066543653649fc38af93729d570806e08d3a3dcf56ff4a3b22e3c98e7ae21"
+      },
+      {
+        "file_name": "dataset_splits.jsonl",
+        "format": "jsonl",
+        "row_count": 3,
+        "sha256": "bcee01db4eeafb8b270b41d5f6892a5e840610fbd6ef58faf64adc207af1be36"
+      },
+      {
+        "file_name": "dataset_splits.json",
+        "format": "json",
+        "row_count": 3,
+        "sha256": "989c382c623240511be98518d9a84b4739865e34847aea2f33444071ecc67e32"
+      },
+      {
+        "file_name": "ground_truth_labels.csv",
+        "format": "csv",
+        "row_count": 238,
+        "sha256": "f3ced3211bf703bb5947321d51e5c1fe0d29630c331c19465e1362f509aafde9"
+      },
+      {
+        "file_name": "ground_truth_labels.jsonl",
+        "format": "jsonl",
+        "row_count": 238,
+        "sha256": "b4343269deec022034f452fb9029edfaf88835512b761591e920b2ea87634836"
+      },
+      {
+        "file_name": "ground_truth_labels.json",
+        "format": "json",
+        "row_count": 238,
+        "sha256": "0bfec06c46ed8f0dfc388650cdac1e73b54775df41e616d97e66f1b7c102d40b"
+      },
+      {
+        "file_name": "model_runs.csv",
+        "format": "csv",
+        "row_count": 0,
+        "sha256": "4f73aa69fc97640bde39375b092c7706816e34bb61619ece6f101ef9c24428b3"
+      },
+      {
+        "file_name": "model_runs.jsonl",
+        "format": "jsonl",
+        "row_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "file_name": "model_runs.json",
+        "format": "json",
+        "row_count": 0,
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      },
+      {
+        "file_name": "evaluation_results.csv",
+        "format": "csv",
+        "row_count": 0,
+        "sha256": "18d0eb472bbaf39be378a5aa9d6a9b79ed6ba930a295586d642aec08ecd03839"
+      },
+      {
+        "file_name": "evaluation_results.jsonl",
+        "format": "jsonl",
+        "row_count": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "file_name": "evaluation_results.json",
+        "format": "json",
+        "row_count": 0,
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+      },
+      {
+        "file_name": "lifecycle_events.csv",
+        "format": "csv",
+        "row_count": 3775,
+        "sha256": "a29dc3ceee274ae0a9eee630d0d1144a6bd57b4ba289a3ce80ab958194e41119"
+      },
+      {
+        "file_name": "lifecycle_events.jsonl",
+        "format": "jsonl",
+        "row_count": 3775,
+        "sha256": "8470ad679138bc9d3ca4365686c48f3d3be00b330c3c878dc7450466bc94d4dd"
+      },
+      {
+        "file_name": "lifecycle_events.json",
+        "format": "json",
+        "row_count": 3775,
+        "sha256": "d0a7479dca22f56d71d4890d720450ab62d5cc24d6d7b4bf8a35026fce4f980e"
+      },
+      {
+        "file_name": "seed_data.sql",
+        "format": "sql",
+        "row_count": 19161,
+        "sha256": "5e627a9af5492649c4aa921c71de3d4f2fd9edd538b77b42c35da3a30753eed9"
+      }
+    ],
+    "manifest_checksum_note": "Checksums cover every collection export and seed_data.sql; manifest.json is excluded because it contains these checksums."
+  },
+  "seed": 20261022,
+  "started_at": "2026-11-11T11:21:50.613124+00:00"
+}

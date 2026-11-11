@@ -57,6 +57,18 @@
 .panel-heading h2 { margin: 0; color: #354052; font-size: 13px; font-weight: 680; letter-spacing: -.01em; }
 .panel-heading p { margin: 5px 0 0; color: #98a0ad; font-size: 10px; line-height: 1.5; }
 .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 17px; }
+.entity-count-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.entity-count-card { min-width: 0; padding: 13px; border: 1px solid #edf0f4; border-radius: 8px; background: #fcfcfd; }
+.entity-count-label, .entity-count-target { display: block; color: #8992a0; font-size: 10px; }
+.entity-count-value { display: block; margin: 7px 0 5px; color: #293446; font-size: 20px; font-weight: 680; letter-spacing: -.03em; }
+.entity-count-target { min-height: 14px; color: #7d8798; font-size: 9px; }
+.entity-progress { display: flex; align-items: center; gap: 7px; margin-top: 9px; color: #8290a4; font-size: 9px; }
+.entity-progress-track { height: 5px; flex: 1; overflow: hidden; border-radius: 6px; background: #e9edf4; }
+.entity-progress-track i { display: block; height: 100%; border-radius: inherit; background: #6480df; }
+.supporting-count-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.supporting-count-card { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 11px 12px; border: 1px solid #edf0f4; border-radius: 8px; }
+.supporting-count-card span { color: #7e899a; font-size: 9px; }
+.supporting-count-card strong { color: #354052; font-size: 14px; font-weight: 680; }
 .metric-card { position: relative; min-height: 128px; padding: 17px 17px 14px; border: 1px solid #e9ecf1; border-radius: 10px; background: #fff; }
 .metric-icon { display: grid; width: 32px; height: 32px; place-items: center; margin-bottom: 14px; border-radius: 9px; }
 .metric-icon.blue { background: #eff3ff; color: #526fd3; }
@@ -270,6 +282,7 @@
   .main-content { padding-right: 24px; padding-left: 24px; }
   .topbar { padding-right: 24px; padding-left: 24px; }
   .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .entity-count-grid, .supporting-count-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .strategy-metric-grid { grid-template-columns: 1fr; }
 }
 
@@ -287,6 +300,7 @@
   .page-heading { align-items: flex-start; }
   .page-heading h1 { font-size: 24px; }
   .dashboard-grid, .two-column-layout { grid-template-columns: 1fr; }
+  .entity-count-grid, .supporting-count-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .wide-panel { grid-column: auto; }
   .panel { padding: 15px; }
   .catalog-panel { padding: 0; }

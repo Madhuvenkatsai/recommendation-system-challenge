@@ -1,8 +1,10 @@
 import csv
 from datetime import datetime
+import hashlib
 import json
 from pathlib import Path
 import re
+import sqlite3
 import shutil
 import tempfile
 from typing import Any
@@ -194,6 +196,67 @@ def test_generated_documents_match_schema_fields_and_encode_as_bson() -> None:
             assert set(REQUIRED_FIELDS[collection_name]) <= set(record)
             assert set(record) <= properties
             BSON.encode(record)
+
+
+def test_exports_include_consistent_json_csv_jsonl_sql_and_checksums(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "exports"
+    target = ExportGenerationTarget(output)
+    manifest = GenerationEngine(small_config(), batch_size=31).run(target)
+    export_manifest = json.loads(
+        (output / "manifest.json").read_text(encoding="utf-8")
+    )
+    export_files = export_manifest["exports"]["files"]
+    assert len(export_files) == len(COLLECTION_NAMES) * 3 + 1
+    by_name = {item["file_name"]: item for item in export_files}
+
+    for collection_name in COLLECTION_NAMES:
+        json_rows = json.loads(
+            (output / f"{collection_name}.json").read_text(encoding="utf-8")
+        )
+        jsonl_rows = [
+            json.loads(line)
+            for line in (output / f"{collection_name}.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        ]
+        with (output / f"{collection_name}.csv").open(
+            encoding="utf-8", newline=""
+        ) as csv_file:
+            csv_rows = list(csv.DictReader(csv_file))
+        assert json_rows == jsonl_rows
+        assert len(json_rows) == len(csv_rows) == manifest.collection_counts[
+            collection_name
+        ]
+        for extension in ("csv", "jsonl", "json"):
+            metadata = by_name[f"{collection_name}.{extension}"]
+            payload = (output / metadata["file_name"]).read_bytes()
+            assert metadata["sha256"] == hashlib.sha256(payload).hexdigest()
+            assert metadata["row_count"] == len(json_rows)
+
+    connection = sqlite3.connect(":memory:")
+    try:
+        connection.executescript(
+            (output / "seed_data.sql").read_text(encoding="utf-8")
+        )
+        for collection_name in COLLECTION_NAMES:
+            count = connection.execute(
+                f'SELECT COUNT(*) FROM "{collection_name}"'
+            ).fetchone()[0]
+            assert count == manifest.collection_counts[collection_name]
+    finally:
+        connection.close()
+
+
+def test_export_target_refuses_to_overwrite_existing_files(tmp_path: Path) -> None:
+    output = tmp_path / "exports"
+    output.mkdir()
+    existing = output / "customers.json"
+    existing.write_text("[]\n", encoding="utf-8")
+
+    with pytest.raises(FileExistsError, match="Refusing to overwrite"):
+        ExportGenerationTarget(output)
 
 
 def test_foreign_keys_chronology_lifecycle_and_money_are_consistent() -> None:

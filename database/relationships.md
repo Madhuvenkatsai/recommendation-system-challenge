@@ -21,6 +21,7 @@ products 1 ── * product_relations ── 1 products (source/target product)
 generation_runs 1 ── * validation_issues
 generation_runs 1 ── * anomaly_fixtures
 anomaly_fixtures embeds isolated fixture records and source IDs
+cart/order 1 ── * lifecycle_events (append-only state transitions)
 dataset version 1 ── 1 train split
 dataset version 1 ── 1 validation split
 dataset version 1 ── 1 test split
@@ -67,6 +68,14 @@ model_runs 1 ── * evaluation_results * ── 1 dataset_splits
   accidentally.
 - Generation/validation/evaluation records are audit metadata, not source
   events or model features.
+- `lifecycle_events` records cart/order creation and state changes as immutable
+  chronological rows. Each event references a cart or order by `entity_type`
+  and `entity_id`; this polymorphic reference is validated by the application.
+  `(entity_type, entity_id, sequence)` is unique, sequence starts at one, and
+  each event's `previous_state` must match the preceding event's `new_state`.
+  The latest recorded state must match the entity's current status. Existing
+  records without event rows remain readable; the validator checks available
+  histories rather than inventing transitions that were never recorded.
 - `anomaly_fixtures` stores altered fixture copies and their explicit labels
   separately; it never mutates or inserts into the clean entity collections.
   `validation_issues` records deterministic findings with source IDs and the
@@ -93,6 +102,10 @@ database initializer:
   split/customer/product/time and customer event-time lookup.
 - Model dataset/time and training-split indexes; unique model/split/K
   evaluation results.
+- Lifecycle entity/sequence uniqueness, per-entity event-time order, and
+  source-reference lookup.
+- Lifecycle entity/sequence uniqueness, per-entity event-time order, and
+  source-reference lookup.
 
 The unique order/cart-to-order lifecycle relationship is validated in
 application code; nullable references are not made unique sparse indexes.
